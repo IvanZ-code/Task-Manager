@@ -12,6 +12,8 @@ public class CreateTaskDto
 
     public TaskPriority Priority { get; set; }
 
+    public DateTime? Deadline { get; set; }
+
 
     public int ExecutorId { get; set; }
 }

@@ -14,6 +14,8 @@ public class TaskItem
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public DateTime? Deadline { get; set; }
+
     public DateTime? ClosedAt { get; set; }
 
     public int CreatorId { get; set; }

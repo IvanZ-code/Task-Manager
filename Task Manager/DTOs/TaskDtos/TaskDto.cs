@@ -27,5 +27,9 @@ public class TaskDto
 
     public DateTime CreatedAt { get; set; }
 
+    public DateTime? Deadline { get; set; }
+
+    public bool IsOverdue { get; set; }
+
     public DateTime? ClosedAt { get; set; }
 }

@@ -36,7 +36,9 @@ public class TaskService : ITaskService
 
             CreatorId = managerId,
 
-            ExecutorId = dto.ExecutorId
+            ExecutorId = dto.ExecutorId,
+
+            Deadline = dto.Deadline
         };
 
 
@@ -102,6 +104,11 @@ public class TaskService : ITaskService
             return false;
 
 
+        if (task.Status == TaskState.Closed ||
+        task.Status == TaskState.Cancelled)
+        {
+            return false;
+        }
 
         bool allowed = false;
 
@@ -128,6 +135,12 @@ public class TaskService : ITaskService
             return false;
 
 
+        if (role == "Employee" &&
+        (dto.Status == TaskState.Closed ||
+         dto.Status == TaskState.Cancelled))
+        {
+            return false;
+        }
 
         task.Status = dto.Status;
 
@@ -182,7 +195,14 @@ public class TaskService : ITaskService
 
             Creator = task.Creator.Login,
 
-            Executor = task.Executor.Login
+            Executor = task.Executor.Login,
+
+            Deadline = task.Deadline,
+
+            IsOverdue =
+                task.Status != TaskState.Closed &&
+                task.Status != TaskState.Cancelled &&
+                task.Deadline < DateTime.UtcNow
         };
     }
 }
