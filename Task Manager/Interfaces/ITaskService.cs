@@ -15,7 +15,7 @@ public interface ITaskService
     );
 
 
-    Task<IEnumerable<TaskDto>> GetManagerTasks(
+    Task<ManagerTasksDto> GetManagerTasks(
         int managerId
     );
 

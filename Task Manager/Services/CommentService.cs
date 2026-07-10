@@ -26,6 +26,12 @@ public class CommentService : ICommentService
         if (task == null)
             throw new KeyNotFoundException("Task not found");
 
+        var user = await _context.Users
+            .FirstOrDefaultAsync(t => t.Id == userId);
+
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
         if (role != "Admin" &&
             task.CreatorId != userId &&
             task.ExecutorId != userId)
@@ -84,7 +90,6 @@ public class CommentService : ICommentService
             role);
 
         return await _context.Comments
-            .Include(c => c.Author)
             .Where(c =>
                 c.TaskItemId == task.Id &&
                 !c.IsDeleted)

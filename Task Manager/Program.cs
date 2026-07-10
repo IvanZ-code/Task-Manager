@@ -9,13 +9,31 @@ using Task_Manager.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var jwtKey = builder.Configuration["Jwt:Key"];
+
+if (string.IsNullOrWhiteSpace(jwtKey) ||
+    jwtKey == "__FROM_USER_SECRETS__")
+{
+    throw new InvalidOperationException(
+        "JWT key is not configured.");
+}
+
+var connectionString = builder.Configuration.GetConnectionString("PostgreSql");
+
+if (string.IsNullOrWhiteSpace(connectionString) ||
+    connectionString == "__FROM_USER_SECRETS__")
+{
+    throw new InvalidOperationException(
+        "Database connection string is not configured.");
+}
+
 // Add services to the container.
 builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddScoped<ICommentService, CommentService>();
 
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSql")));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddControllers();
 
@@ -36,7 +54,7 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
 
         Description =
-            "¬ведите JWT токен в формате: Bearer {token}"
+            "Enter JWT token in format: Bearer {token}"
     });
 
 

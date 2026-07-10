@@ -11,12 +11,6 @@ public class DataContext : DbContext
 
     public DbSet<User> Users => Set<User>();
 
-    public DbSet<Employee> Employees => Set<Employee>();
-
-    public DbSet<Manager> Managers => Set<Manager>();
-
-    public DbSet<Admin> Admins => Set<Admin>();
-
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
     public DbSet<Comment> Comments => Set<Comment>();

@@ -23,6 +23,36 @@ public class TaskService : ITaskService
         CreateTaskDto dto,
         int managerId)
     {
+        var manager = await _context.Users
+       .FirstOrDefaultAsync(u => u.Id == managerId);
+
+        if (manager == null)
+            throw new KeyNotFoundException("managerId is not found");
+
+        var executor = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == dto.ExecutorId);
+
+        if (executor == null)
+            throw new KeyNotFoundException("ExecutorId is not found");
+
+
+        switch (manager.Role)
+        {
+            case UserRole.Manager:
+                if (executor.Role != UserRole.Employee)
+                    throw new UnauthorizedAccessException("Manager can assign tasks only to employees");
+                break;
+
+            case UserRole.Admin:
+                if (executor.Role == UserRole.Admin)
+                    throw new UnauthorizedAccessException("Admin can't assign tasks to another admin");
+                break;
+
+            default:
+                throw new UnauthorizedAccessException("You have no rights");
+        }
+
+        
 
         var task = new TaskItem
         {
@@ -38,7 +68,7 @@ public class TaskService : ITaskService
 
             ExecutorId = dto.ExecutorId,
 
-            Deadline = dto.Deadline
+            Deadline = dto.Deadline?.UtcDateTime
         };
 
 
@@ -65,17 +95,26 @@ public class TaskService : ITaskService
         return tasks.Select(MapTaskSync);
     }
 
-    public async Task<IEnumerable<TaskDto>> GetManagerTasks(
+    public async Task<ManagerTasksDto> GetManagerTasks(
     int managerId)
     {
-        var tasks = await _context.Tasks
+        var created = await _context.Tasks
+        .Include(t => t.Creator)
+        .Include(t => t.Executor)
+        .Where(t => t.CreatorId == managerId)
+        .ToListAsync();
+
+        var assigned = await _context.Tasks
             .Include(t => t.Creator)
             .Include(t => t.Executor)
-            .Where(t => t.CreatorId == managerId)
+            .Where(t => t.ExecutorId == managerId)
             .ToListAsync();
 
-
-        return tasks.Select(MapTaskSync);
+        return new ManagerTasksDto
+        {
+            CreatedTasks = created.Select(MapTaskSync),
+            AssignedTasks = assigned.Select(MapTaskSync)
+        };
     }
 
     public async Task<IEnumerable<TaskDto>> GetAllTasks()
@@ -145,7 +184,7 @@ public class TaskService : ITaskService
         task.Status = dto.Status;
 
 
-        if (dto.Status == TaskState.Closed)
+        if (dto.Status == TaskState.Closed || dto.Status == TaskState.Cancelled)
         {
             task.ClosedAt = DateTime.UtcNow;
         }
@@ -193,16 +232,26 @@ public class TaskService : ITaskService
 
             Priority = task.Priority.ToString(),
 
+            CreatorId = task.Creator.Id,
+
             Creator = task.Creator.Login,
 
+            ExecutorId = task.Executor.Id,
+
             Executor = task.Executor.Login,
+
+            CreatedAt = task.CreatedAt,
 
             Deadline = task.Deadline,
 
             IsOverdue =
                 task.Status != TaskState.Closed &&
                 task.Status != TaskState.Cancelled &&
-                task.Deadline < DateTime.UtcNow
+                task.Deadline < DateTime.UtcNow,
+
+            ClosedAt = task.ClosedAt
+
+            
         };
     }
 }

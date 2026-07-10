@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using Task_Manager.Data;
 using Task_Manager.DTOs.AuthDtos;
 using Task_Manager.Models;
@@ -30,8 +32,24 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
+   
+        if (await _context.Users.AnyAsync(u => u.Login == dto.Login))
+        {
+            return BadRequest(new
+            {
+                message = "Login is already occupied"
+            });
+        }
 
-        var user = new Employee
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+        {
+            return BadRequest(new
+            {
+                message = "Email is already occupied"
+            });
+        }
+
+        var user = new User
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
