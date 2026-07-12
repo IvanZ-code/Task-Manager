@@ -56,8 +56,9 @@ public class TaskService : ITaskService
                 throw new UnauthorizedAccessException("You have no rights");
         }
 
-        
 
+        var deadline = dto.Deadline?.UtcDateTime;
+        
         var task = new TaskItem
         {
             Title = dto.Title,
@@ -72,9 +73,11 @@ public class TaskService : ITaskService
 
             ExecutorId = dto.ExecutorId,
 
-            Deadline = dto.Deadline?.UtcDateTime
+            Deadline = deadline
         };
 
+        if (deadline != null && deadline <= task.CreatedAt)
+            throw new InvalidOperationException("Deadline date is earlier than create date");
 
         _context.Tasks.Add(task);
 
@@ -92,50 +95,117 @@ public class TaskService : ITaskService
 
 
 
-    public async Task<IEnumerable<TaskDto>> GetEmployeeTasks(
+    public async Task<TaskGroupsDto> GetEmployeeTasks(
     int employeeId)
     {
         var tasks = await _context.Tasks
             .Include(t => t.Creator)
             .Include(t => t.Executor)
             .Where(t => t.ExecutorId == employeeId)
+            .OrderByDescending(t => t.Priority)
+            .ThenBy(t => t.Deadline)
+            .ThenBy(t => t.CreatedAt)
             .ToListAsync();
 
 
-        return tasks.Select(MapTaskSync);
+        return new TaskGroupsDto
+        {
+            Closed = tasks
+            .Where(t => t.Status == TaskState.Closed)
+            .Select(MapTaskSync),
+
+            Cancelled = tasks
+            .Where(t => t.Status == TaskState.Cancelled)
+            .Select(MapTaskSync),
+
+            Active = tasks
+            .Where(t => t.Status != TaskState.Closed &&
+                        t.Status != TaskState.Cancelled)
+            .Select(MapTaskSync)
+        };
     }
 
-    public async Task<ManagerTasksDto> GetManagerTasks(
-    int managerId)
+    public async Task<ManagerTasksDto> GetManagerTasks(int managerId)
     {
         var created = await _context.Tasks
-        .Include(t => t.Creator)
-        .Include(t => t.Executor)
-        .Where(t => t.CreatorId == managerId)
-        .ToListAsync();
+            .Include(t => t.Creator)
+            .Include(t => t.Executor)
+            .Where(t => t.CreatorId == managerId)
+            .OrderByDescending(t => t.Priority)
+            .ThenBy(t => t.Deadline)
+            .ThenBy(t => t.CreatedAt)
+            .ToListAsync();
 
         var assigned = await _context.Tasks
             .Include(t => t.Creator)
             .Include(t => t.Executor)
             .Where(t => t.ExecutorId == managerId)
+            .OrderByDescending(t => t.Priority)
+            .ThenBy(t => t.Deadline)
+            .ThenBy(t => t.CreatedAt)
             .ToListAsync();
 
         return new ManagerTasksDto
         {
-            CreatedTasks = created.Select(MapTaskSync),
-            AssignedTasks = assigned.Select(MapTaskSync)
+            CreatedTasks = new TaskGroupsDto
+            {
+                Closed = created
+                    .Where(t => t.Status == TaskState.Closed)
+                    .Select(MapTaskSync),
+
+                Cancelled = created
+                    .Where(t => t.Status == TaskState.Cancelled)
+                    .Select(MapTaskSync),
+
+                Active = created
+                    .Where(t => t.Status != TaskState.Closed &&
+                                t.Status != TaskState.Cancelled)
+                    .Select(MapTaskSync)
+            },
+
+            AssignedTasks = new TaskGroupsDto
+            {
+                Closed = assigned
+                    .Where(t => t.Status == TaskState.Closed)
+                    .Select(MapTaskSync),
+
+                Cancelled = assigned
+                    .Where(t => t.Status == TaskState.Cancelled)
+                    .Select(MapTaskSync),
+
+                Active = assigned
+                    .Where(t => t.Status != TaskState.Closed &&
+                                t.Status != TaskState.Cancelled)
+                    .Select(MapTaskSync)
+            }
         };
     }
 
-    public async Task<IEnumerable<TaskDto>> GetAllTasks()
+    public async Task<TaskGroupsDto> GetAllTasks()
     {
         var tasks = await _context.Tasks
             .Include(t => t.Creator)
             .Include(t => t.Executor)
+            .OrderByDescending(t => t.Priority)
+            .ThenBy(t => t.Deadline)
+            .ThenBy(t => t.CreatedAt)
             .ToListAsync();
 
+        return new TaskGroupsDto
+        {
+            Closed = tasks
+                .Where(t => t.Status == TaskState.Closed)
+                .Select(MapTaskSync),
 
-        return tasks.Select(MapTaskSync);
+            Cancelled = tasks
+                .Where(t => t.Status == TaskState.Cancelled)
+                .Select(MapTaskSync),
+
+            Active = tasks
+                .Where(t => t.Status != TaskState.Closed &&
+                            t.Status != TaskState.Cancelled)
+                .Select(MapTaskSync)
+        };
     }
 
     public async Task<bool> UpdateStatus(

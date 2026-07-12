@@ -2,6 +2,6 @@
 
 public class ManagerTasksDto
 {
-    public IEnumerable<TaskDto> CreatedTasks { get; set; } = [];
-    public IEnumerable<TaskDto> AssignedTasks { get; set; } = [];
+    public TaskGroupsDto CreatedTasks { get; set; } = new();
+    public TaskGroupsDto AssignedTasks { get; set; } = new();
 }

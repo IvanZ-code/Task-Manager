@@ -10,7 +10,7 @@ public interface ITaskService
     );
 
 
-    Task<IEnumerable<TaskDto>> GetEmployeeTasks(
+    Task<TaskGroupsDto> GetEmployeeTasks(
         int employeeId
     );
 
@@ -20,7 +20,7 @@ public interface ITaskService
     );
 
 
-    Task<IEnumerable<TaskDto>> GetAllTasks();
+    Task<TaskGroupsDto> GetAllTasks();
 
 
     Task<bool> UpdateStatus(
