@@ -78,7 +78,12 @@ public class CommentService : ICommentService
             task.Id,
             userId,
             HistoryAction.CommentAdded,
-            $"Comment #{comment.Id} added."
+            $"Comment #{comment.Id} added.",
+            JsonSerializer.Serialize(new
+            {
+                CommentId = comment.Id,
+                CurrentText = comment.Text
+            })
         );
 
         return new CommentDto
@@ -213,7 +218,12 @@ public class CommentService : ICommentService
             comment.TaskItemId,
             userId,
             HistoryAction.CommentDeleted,
-            $"Comment #{comment.Id} deleted."
+            $"Comment #{comment.Id} deleted.",
+            JsonSerializer.Serialize(new
+            {
+                CommentId = comment.Id,
+                CurrentText = comment.Text
+            })
         );
 
         return true;
