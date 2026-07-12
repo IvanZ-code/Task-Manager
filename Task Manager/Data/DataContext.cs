@@ -15,6 +15,8 @@ public class DataContext : DbContext
 
     public DbSet<Comment> Comments => Set<Comment>();
 
+    public DbSet<TaskHistory> TaskHistories => Set<TaskHistory>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -42,5 +44,17 @@ public class DataContext : DbContext
             .WithMany(t => t.Comments)
             .HasForeignKey(c => c.TaskItemId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TaskHistory>()
+            .HasOne(h => h.Task)
+            .WithMany(t => t.History)
+            .HasForeignKey(h => h.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TaskHistory>()
+            .HasOne(h => h.User)
+            .WithMany()
+            .HasForeignKey(h => h.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

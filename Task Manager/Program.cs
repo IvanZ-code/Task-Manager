@@ -32,6 +32,8 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddScoped<ICommentService, CommentService>();
 
+builder.Services.AddScoped<IHistoryService, HistoryService>();
+
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(connectionString));
 

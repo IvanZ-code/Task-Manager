@@ -12,10 +12,13 @@ public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
 
+    private readonly IHistoryService _historyService;
 
-    public TasksController(ITaskService taskService)
+
+    public TasksController(ITaskService taskService, IHistoryService historyService)
     {
         _taskService = taskService;
+        _historyService = historyService;
     }
 
 
@@ -116,7 +119,14 @@ public class TasksController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
+    [HttpGet("{id}/history")]
+    public async Task<IActionResult> GetHistory(int id)
+    {
+        var history = await _historyService.GetHistory(id);
 
+        return Ok(history);
+    }
 
     private int GetUserId()
     {

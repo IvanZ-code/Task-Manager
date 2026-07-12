@@ -25,4 +25,7 @@ public class TaskItem
     public User Executor { get; set; } = null!;
 
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+    public ICollection<TaskHistory> History { get; set; }
+    = new List<TaskHistory>();
 }

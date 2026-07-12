@@ -11,10 +11,13 @@ public class TaskService : ITaskService
 {
     private readonly DataContext _context;
 
+    private readonly IHistoryService _historyService;
 
-    public TaskService(DataContext context)
+
+    public TaskService(DataContext context, IHistoryService historyService)
     {
         _context = context;
+        _historyService = historyService;
     }
 
 
@@ -76,6 +79,12 @@ public class TaskService : ITaskService
 
         await _context.SaveChangesAsync();
 
+        await _historyService.AddRecord(
+            task.Id,
+            managerId,
+            HistoryAction.TaskCreated,
+            $"Task '{task.Title}' created."
+        );
 
         return await MapTask(task);
     }
@@ -144,7 +153,7 @@ public class TaskService : ITaskService
 
 
         if (task.Status == TaskState.Closed ||
-        task.Status == TaskState.Cancelled)
+        task.Status == TaskState.Cancelled || task.Status == dto.Status)
         {
             return false;
         }
@@ -181,6 +190,8 @@ public class TaskService : ITaskService
             return false;
         }
 
+        var oldStatus = task.Status;
+
         task.Status = dto.Status;
 
 
@@ -192,6 +203,23 @@ public class TaskService : ITaskService
 
         await _context.SaveChangesAsync();
 
+        await _historyService.AddRecord(
+            task.Id,
+            userId,
+            HistoryAction.StatusChanged,
+            $"Status changed: {oldStatus} → {task.Status}"
+
+        );
+
+        if (task.Status == TaskState.Closed || task.Status == TaskState.Cancelled)
+        {
+            await _historyService.AddRecord(
+                task.Id,
+                userId,
+                HistoryAction.TaskClosed,
+                "Task closed."
+            );
+        }
 
         return true;
     }

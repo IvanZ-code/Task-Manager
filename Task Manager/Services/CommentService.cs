@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Text.Json;
 using Task_Manager.Data;
 using Task_Manager.DTOs.CommentDtos;
 using Task_Manager.Interfaces;
@@ -11,9 +12,12 @@ public class CommentService : ICommentService
 {
     private readonly DataContext _context;
 
-    public CommentService(DataContext context)
+    private readonly IHistoryService _historyService;
+
+    public CommentService(DataContext context, IHistoryService historyService)
     {
         _context = context;
+        _historyService = historyService;
     }
     private async Task<TaskItem> GetAccessibleTask(
     int taskId,
@@ -68,6 +72,14 @@ public class CommentService : ICommentService
         await _context.Entry(comment)
             .Reference(c => c.Author)
             .LoadAsync();
+
+
+        await _historyService.AddRecord(
+            task.Id,
+            userId,
+            HistoryAction.CommentAdded,
+            $"Comment #{comment.Id} added."
+        );
 
         return new CommentDto
         {
@@ -135,10 +147,30 @@ public class CommentService : ICommentService
             throw new UnauthorizedAccessException();
         }
 
+        if (comment.Text == dto.Text)
+        {
+            throw new InvalidOperationException("Comment has not been changed");
+        }
+        
+
+        var oldText = comment.Text;
         comment.Text = dto.Text;
         comment.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        await _historyService.AddRecord(
+            comment.TaskItemId,
+            userId,
+            HistoryAction.CommentUpdated,
+            $"Comment #{comment.Id} updated.",
+            JsonSerializer.Serialize(new
+            {
+                CommentId = comment.Id,
+                OldText = oldText,
+                NewText = comment.Text
+            })
+        );
 
         return true;
     }
@@ -176,6 +208,13 @@ public class CommentService : ICommentService
         comment.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        await _historyService.AddRecord(
+            comment.TaskItemId,
+            userId,
+            HistoryAction.CommentDeleted,
+            $"Comment #{comment.Id} deleted."
+        );
 
         return true;
     }
