@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Task_Manager.Data;
 using Task_Manager.DTOs.AuthDtos;
+using Task_Manager.Enums;
 using Task_Manager.Models;
 
 namespace Task_Manager.Controllers;

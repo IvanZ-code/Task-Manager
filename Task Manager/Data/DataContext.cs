@@ -17,6 +17,8 @@ public class DataContext : DbContext
 
     public DbSet<TaskHistory> TaskHistories => Set<TaskHistory>();
 
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -55,6 +57,18 @@ public class DataContext : DbContext
             .HasOne(h => h.User)
             .WithMany()
             .HasForeignKey(h => h.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasOne(a => a.Actor)
+            .WithMany()
+            .HasForeignKey(a => a.ActorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasOne(a => a.TargetUser)
+            .WithMany()
+            .HasForeignKey(a => a.TargetUserId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

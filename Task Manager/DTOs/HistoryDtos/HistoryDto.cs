@@ -1,4 +1,4 @@
-﻿using Task_Manager.Models;
+﻿using Task_Manager.Enums;
 
 namespace Task_Manager.DTOs.HistoryDtos;
 

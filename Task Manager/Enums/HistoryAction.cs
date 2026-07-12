@@ -1,4 +1,4 @@
-﻿namespace Task_Manager.Models;
+﻿namespace Task_Manager.Enums;
 
 public enum HistoryAction
 {

@@ -2,19 +2,19 @@
 
 namespace Task_Manager.Models;
 
-public class TaskHistory
+public class AuditLog
 {
     public int Id { get; set; }
 
-    public int TaskId { get; set; }
+    public int ActorId { get; set; }
 
-    public TaskItem Task { get; set; } = null!;
+    public User Actor { get; set; } = null!;
 
-    public int UserId { get; set; }
+    public int? TargetUserId { get; set; }
 
-    public User User { get; set; } = null!;
+    public User? TargetUser { get; set; }
 
-    public HistoryAction Action { get; set; }
+    public AuditAction Action { get; set; }
 
     public string? Description { get; set; }
 
