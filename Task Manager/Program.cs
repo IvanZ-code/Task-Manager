@@ -38,6 +38,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IAuditService, AuditService>();
 
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(connectionString));
 
